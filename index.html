@@ -3,93 +3,1162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Resmi PLO UBP PMU | Core-MES Analytics</title>
-    <!-- Tailwind CSS CDN untuk styling modern dan responsif -->
+    <title>Industrial Analytics Pro | Core-MES</title>
+    <!-- CSS dan Library Pendukung -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-glow: conic-gradient(from 180deg at 50% 50%, #16abff33 0deg, #0885ff33 55deg, #54d6ff33 120deg, #0071ff33 160deg, transparent 360deg);
+        }
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #020617;
+            color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             background-image: 
                 radial-gradient(circle at 0% 0%, rgba(30, 58, 138, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 100% 100%, rgba(29, 78, 216, 0.1) 0%, transparent 50%);
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .glass-panel:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .kpi-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.4));
+            border-left: 4px solid #3b82f6;
+        }
+        .custom-dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #0f172a;
+            min-width: 260px;
+            box-shadow: 0px 20px 50px 0px rgba(0,0,0,0.7);
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown-content.show { display: block; }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 15px -3px rgba(37, 99, 235, 0.4);
+        }
+        .upload-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -3px rgba(37, 99, 235, 0.5); }
+        
+        .chart-container { position: relative; height: 320px; width: 100%; }
+        .btn-action { font-size: 10px; padding: 4px 10px; border-radius: 6px; font-weight: 700; transition: all 0.2s; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .table-row-highlight:hover { background-color: rgba(59, 130, 246, 0.05); }
+        
+        .value-pulse { animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow {
+            0% { text-shadow: 0 0 0px rgba(59, 130, 246, 0); }
+            50% { text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+            100% { text-shadow: 0 0 0px rgba(59, 130, 246, 0); }
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col items-center justify-between p-6 select-none">
+<body class="p-4 md:p-8">
+    <!-- Kontainer Notifikasi Toast -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[200] space-y-3"></div>
 
-    <!-- Header Atas (Spacer) -->
-    <div class="w-full max-w-5xl flex justify-between items-center py-4 border-b border-white/5">
-        <span class="text-xs font-black tracking-[0.2em] text-blue-500 uppercase">CORE-MES SYSTEMS</span>
-        <span class="text-[10px] font-bold text-slate-500 bg-slate-900 border border-white/5 px-3 py-1 rounded-full uppercase">ONLINE PORTAL</span>
+    <div id="main-content" class="max-w-[1700px] mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-8">
+            <div class="relative">
+                <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-12 bg-blue-600 rounded-full blur-sm"></div>
+                <h1 class="text-3xl font-black text-white tracking-tight">INDUSTRIAL <span class="text-blue-500">ANALYTICS</span></h1>
+                <div class="flex items-center gap-3 mt-2">
+                    <span class="flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <p class="text-slate-400 text-[11px] font-bold uppercase tracking-[0.3em]">Core-MES Visualization • UBP PMU</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex bg-slate-900/50 p-1.5 rounded-2xl border border-white/5 gap-2 backdrop-blur-md">
+                    <button onclick="exportToExcel()" class="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-emerald-600/20">
+                        Excel
+                    </button>
+                    <button onclick="exportToPDF()" class="bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-rose-600/20">
+                        PDF
+                    </button>
+                </div>
+
+                <label class="upload-btn cursor-pointer px-6 py-3 rounded-xl text-xs font-extrabold text-white flex items-center gap-3 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    IMPOR DATA KWH
+                    <input type="file" id="excelUpload" class="hidden" accept=".xlsx, .xls, .csv">
+                </label>
+
+                <div class="flex bg-slate-900/80 p-1.5 rounded-2xl border border-white/10 shadow-inner">
+                    <button onclick="setAnalysisMode('status')" id="btn-status" class="px-5 py-2 rounded-xl text-xs font-bold transition-all text-slate-500">STATUS</button>
+                    <button onclick="setAnalysisMode('lvl3')" id="btn-lvl3" class="px-5 py-2 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-lg">LVL 3</button>
+                </div>
+
+                <!-- Filter Dropdowns -->
+                <div class="flex gap-2">
+                    <div class="custom-dropdown">
+                        <button onclick="toggleDropdown('pltmgDropdown')" class="bg-slate-800/50 hover:bg-slate-800 border border-white/5 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 flex items-center gap-3 transition-all">
+                            UNIT PLTMG
+                            <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <div id="pltmgDropdown" class="dropdown-content">
+                            <div class="flex justify-between px-3 py-2 border-b border-white/5 mb-2">
+                                <button onclick="bulkCheckPltmg(true)" class="btn-action bg-blue-600/20 text-blue-400">Pilih Semua</button>
+                                <button onclick="bulkCheckPltmg(false)" class="btn-action bg-slate-800 text-slate-400">Reset</button>
+                            </div>
+                            <div id="pltmgOptions" class="space-y-1 max-h-64 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+
+                    <div class="custom-dropdown">
+                        <button onclick="toggleDropdown('machineDropdown')" class="bg-slate-800/50 hover:bg-slate-800 border border-white/5 rounded-xl px-4 py-3 text-xs font-bold text-slate-200 flex items-center gap-3 transition-all">
+                            MESIN
+                            <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <div id="machineDropdown" class="dropdown-content">
+                            <div class="flex justify-between px-3 py-2 border-b border-white/5 mb-2">
+                                <button onclick="bulkCheckMachine(true)" class="btn-action bg-blue-600/20 text-blue-400">Pilih Semua</button>
+                                <button onclick="bulkCheckMachine(false)" class="btn-action bg-slate-800 text-slate-400">Reset</button>
+                            </div>
+                            <div id="machineOptions" class="space-y-1 max-h-64 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- SISTEM NAVIGASI TAB HALAMAN -->
+        <div class="flex border-b border-white/5 mb-8 gap-1">
+            <button onclick="switchTab('tab-dashboard')" id="nav-dashboard" class="px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 border-blue-500 text-blue-500 transition-all duration-300">
+                Dashboard Utama
+            </button>
+            <button onclick="switchTab('tab-status')" id="nav-status" class="px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all duration-300">
+                Analisis Gangguan Status (Jam & Loss)
+            </button>
+        </div>
+
+        <!-- KPI Summary Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="glass-panel p-5 kpi-card">
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Total Energy Loss</p>
+                <div class="flex items-end gap-2 mt-1">
+                    <h3 id="kpi-loss" class="text-2xl font-black text-white value-pulse">0.00</h3>
+                    <span class="text-blue-500 text-xs font-bold mb-1">MWh</span>
+                </div>
+            </div>
+            <div class="glass-panel p-5 kpi-card" style="border-left-color: #f59e0b;">
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Total Downtime</p>
+                <div class="flex items-end gap-2 mt-1">
+                    <h3 id="kpi-duration" class="text-2xl font-black text-white">0.00</h3>
+                    <span class="text-amber-500 text-xs font-bold mb-1">JAM</span>
+                </div>
+            </div>
+            <div class="glass-panel p-5 kpi-card" style="border-left-color: #10b981;">
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Avg Capacity Outage</p>
+                <div class="flex items-end gap-2 mt-1">
+                    <h3 id="kpi-efficiency" class="text-2xl font-black text-white">0.00</h3>
+                    <span class="text-emerald-500 text-xs font-bold mb-1">MW</span>
+                </div>
+            </div>
+            <div class="glass-panel p-5 kpi-card" style="border-left-color: #8b5cf6;">
+                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Event Records</p>
+                <div class="flex items-end gap-2 mt-1">
+                    <h3 id="kpi-count" class="text-2xl font-black text-white">0</h3>
+                    <span class="text-purple-500 text-xs font-bold mb-1">LOGS</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- HALAMAN 1: DASHBOARD UTAMA -->
+        <div id="page-dashboard" class="space-y-8">
+            <div id="capture-area">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
+                    <!-- Pareto -->
+                    <div class="glass-panel p-8 xl:col-span-2 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 relative z-10">
+                            <div>
+                                <h2 class="text-base font-extrabold flex items-center gap-3 tracking-wide uppercase">
+                                    <span class="w-2 h-6 bg-blue-600 rounded-full"></span>
+                                    Pareto Distribution
+                                </h2>
+                                <p class="text-slate-500 text-[10px] mt-1 ml-5">Analisis kontribusi penyebab utama</p>
+                            </div>
+                            <div class="flex bg-slate-900 rounded-xl p-1 text-[10px] border border-white/5">
+                                <button onclick="setMetric('loss')" id="btn-loss" class="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold transition-all shadow-lg">LOSS (MWh)</button>
+                                <button onclick="setMetric('duration')" id="btn-duration" class="px-5 py-2 rounded-lg text-slate-500 font-bold transition-all">DURASI (Jam)</button>
+                            </div>
+                        </div>
+                        <div class="chart-container !h-[420px]">
+                            <canvas id="paretoChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Composition -->
+                    <div class="glass-panel p-8 relative overflow-hidden flex flex-col justify-between h-full">
+                        <div class="absolute bottom-0 left-0 w-48 h-48 bg-emerald-600/5 rounded-full blur-[60px] -ml-24 -mb-24"></div>
+                        <div>
+                            <h2 class="text-base font-extrabold mb-4 flex items-center gap-3 tracking-wide uppercase relative z-10">
+                                <span class="w-2 h-6 bg-emerald-500 rounded-full"></span>
+                                Composition (%)
+                            </h2>
+                            <div class="relative w-full h-[270px] flex justify-center items-center z-10">
+                                <div class="w-[260px] h-[260px]">
+                                    <canvas id="pieChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="pie-legend" class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 pt-4 border-t border-white/5 max-h-[140px] overflow-y-auto pr-1 select-none z-10"></div>
+                    </div>
+                </div>
+
+                <!-- Waterfall -->
+                <div class="grid grid-cols-1 gap-8 mb-8">
+                    <div class="glass-panel p-8">
+                        <h2 class="text-base font-extrabold mb-8 flex items-center gap-3 tracking-wide uppercase">
+                            <span class="w-2 h-6 bg-rose-500 rounded-full"></span>
+                            Loss Bridge Analysis (Waterfall)
+                        </h2>
+                        <div class="chart-container !h-[380px]">
+                            <canvas id="waterfallChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="glass-panel overflow-hidden">
+                    <div class="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+                        <div>
+                            <h3 class="font-black text-white text-base tracking-tight">DETAILED MAINTENANCE LOGS</h3>
+                            <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mt-1">Audit trail data operasional mesin</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div id="statusDropdown" class="custom-dropdown">
+                                <button onclick="toggleDropdown('statusFilterDrop')" class="px-4 py-2 rounded-lg bg-slate-800 text-[10px] font-bold text-slate-300 border border-white/5 flex items-center gap-2">
+                                    FILTER STATUS
+                                    <svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="4"/></svg>
+                                </button>
+                                <div id="statusFilterDrop" class="dropdown-content">
+                                    <div id="statusOptions" class="space-y-1"></div>
+                                </div>
+                            </div>
+                            <span id="logCountLabel" class="text-[11px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-4 py-1.5 rounded-full font-black">0 RECORDS</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-[600px]" id="table-container">
+                        <table class="w-full text-left text-sm whitespace-nowrap" id="maintenanceTable">
+                            <thead class="bg-[#0f172a] text-slate-500 text-[10px] font-black uppercase tracking-[0.15em] sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-8 py-5 border-b border-white/5">Waktu Mulai</th>
+                                    <th class="px-8 py-5 border-b border-white/5">Waktu Selesai</th>
+                                    <th class="px-8 py-5 border-b border-white/5">PLTMG</th>
+                                    <th class="px-8 py-5 border-b border-white/5">Unit Mesin</th>
+                                    <th class="px-8 py-5 text-center border-b border-white/5">Status</th>
+                                    <th class="px-8 py-5 border-b border-white/5">Level 3 Fault</th>
+                                    <th class="px-8 py-5 border-b border-white/5 text-right">Durasi (H)</th>
+                                    <th class="px-8 py-5 border-b border-white/5 text-right">Loss (MWh)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="divide-y divide-white/5">
+                                <tr><td colspan="8" class="px-8 py-20 text-center text-slate-500 italic font-medium">Silahkan unggah file Excel untuk memulai analisis...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HALAMAN 2: ANALISIS STATUS (KWH & JAM) -->
+        <div id="page-status" class="hidden space-y-8">
+            <div id="capture-area-status">
+                <!-- Grid Grafik Sejajar Kiri-Kanan -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Chart Downtime Per Status -->
+                    <div class="glass-panel p-8 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-64 h-64 bg-amber-600/5 rounded-full blur-[80px] -ml-32 -mt-32"></div>
+                        <h2 class="text-base font-extrabold flex items-center gap-3 tracking-wide uppercase relative z-10">
+                            <span class="w-2 h-6 bg-amber-500 rounded-full"></span>
+                            <span id="status-duration-chart-title">Downtime per Status (Jam)</span>
+                        </h2>
+                        <p id="status-duration-chart-desc" class="text-slate-500 text-[10px] mt-1 ml-5 mb-6 relative z-10">Total jam gangguan operasional per kategori Status</p>
+                        <div class="chart-container !h-[340px] relative z-10">
+                            <canvas id="statusDurationChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart MWh Losses Per Status -->
+                    <div class="glass-panel p-8 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+                        <h2 class="text-base font-extrabold flex items-center gap-3 tracking-wide uppercase relative z-10">
+                            <span class="w-2 h-6 bg-blue-500 rounded-full"></span>
+                            <span id="status-loss-chart-title">Energy Losses per Status (MWh)</span>
+                        </h2>
+                        <p id="status-loss-chart-desc" class="text-slate-500 text-[10px] mt-1 ml-5 mb-6 relative z-10">Total kehilangan produksi energi per kategori Status</p>
+                        <div class="chart-container !h-[340px] relative z-10">
+                            <canvas id="statusLossChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Summary Table Matriks -->
+                <div class="glass-panel overflow-hidden mt-8">
+                    <div class="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+                        <div>
+                            <h3 id="status-matrix-title" class="font-black text-white text-base tracking-tight">STATUS LOSS & DOWNTIME SUMMARY MATRIX</h3>
+                            <p id="status-matrix-desc" class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mt-1">Konsolidasi perhitungan statistika parameter Status</p>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap" id="statusSummaryTable">
+                            <thead class="bg-[#0f172a] text-slate-500 text-[10px] font-black uppercase tracking-[0.15em] sticky top-0">
+                                <tr>
+                                    <th id="status-matrix-col1" class="px-8 py-5 border-b border-white/5">Kategori Status</th>
+                                    <th class="px-8 py-5 border-b border-white/5 text-center">Jumlah Kejadian (Logs)</th>
+                                    <th class="px-8 py-5 border-b border-white/5 text-right">Total Jam Downtime (H)</th>
+                                    <th class="px-8 py-5 border-b border-white/5 text-right">Total Energy Loss (MWh)</th>
+                                    <th class="px-8 py-5 border-b border-white/5 text-right">Rata-rata Daya Terganggu (MW)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statusTableBody" class="divide-y divide-white/5">
+                                <tr><td colspan="5" class="px-8 py-20 text-center text-slate-500 italic font-medium">Silahkan unggah file Excel untuk memulai analisis...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Container Utama -->
-    <main class="max-w-2xl w-full text-center space-y-8 py-12">
-        
-        <!-- Logo / Icon Representatif (SVG) -->
-        <div class="flex justify-center">
-            <div class="p-5 bg-blue-500/10 rounded-full border border-blue-500/20 text-blue-400 shadow-2xl shadow-blue-500/10">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-                </svg>
-            </div>
-        </div>
+    <script>
+        Chart.register(ChartDataLabels);
 
-        <!-- Judul Utama & Sub-Judul Akademis -->
-        <div class="space-y-4">
-            <p class="text-blue-500 text-xs font-extrabold tracking-[0.3em] uppercase">SISTEM INFORMASI MONITORING & ANALISIS</p>
-            <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white leading-none">
-                PLO <span class="bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">UBP PMU</span>
-            </h1>
-            <p class="text-sm md:text-base text-slate-400 max-w-lg mx-auto font-medium">
-                Platform visualisasi data pemeliharaan pembangkit, Pareto distribusi gangguan, serta Loss Bridge Analysis berbasis Cloud Integration.
-            </p>
-        </div>
+        // =========================================================================
+        // LINK ENDPOINT REST API (GOOGLE APPS SCRIPT WEB APP)
+        // =========================================================================
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx-VYtv7XWsWlAwVpb7YgIiRW988tNe_b3rTPVNZjESLjpsE2tNa53ZlP978dIlTbro/exec";
 
-        <!-- Pemisah Visual -->
-        <div class="flex justify-center gap-2">
-            <span class="w-16 h-1 bg-blue-600 rounded-full"></span>
-            <span class="w-3 h-1 bg-indigo-500 rounded-full"></span>
-            <span class="w-1.5 h-1 bg-slate-800 rounded-full"></span>
-        </div>
+        // =========================================================================
+        // UTILITY: SISTEM TOAST NOTIFIKASI KUSTOM (AESTHETIC & NON-BLOCKING)
+        // =========================================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let borderBg = 'border-blue-500/30 text-slate-200';
+            let iconColor = 'bg-blue-500';
+            
+            if (type === 'success') {
+                borderBg = 'border-emerald-500/30 text-emerald-200';
+                iconColor = 'bg-emerald-500';
+            } else if (type === 'error') {
+                borderBg = 'border-rose-500/30 text-rose-200';
+                iconColor = 'bg-rose-500';
+            } else if (type === 'loading') {
+                borderBg = 'border-amber-500/30 text-amber-200 animate-pulse';
+                iconColor = 'bg-amber-500';
+            }
+            
+            toast.className = `glass-panel ${borderBg} px-6 py-4 rounded-xl border flex items-center gap-3 shadow-2xl transition-all duration-300 transform translate-y-5 opacity-0`;
+            toast.innerHTML = `
+                <span class="flex h-2.5 w-2.5 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${iconColor} opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 ${iconColor}"></span>
+                </span>
+                <span class="text-xs font-bold uppercase tracking-wider">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animasi masuk
+            setTimeout(() => {
+                toast.classList.remove('translate-y-5', 'opacity-0');
+            }, 50);
+            
+            // Otomatis tutup jika bukan loading
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    toast.classList.add('translate-y-5', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            }
+            return toast; // Mengembalikan elemen untuk penutupan manual
+        }
 
-        <!-- Kotak Fitur Utama (Highlight) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left max-w-xl mx-auto pt-4">
-            <div class="bg-slate-900/40 border border-white/5 p-4 rounded-xl">
-                <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-1">DATA CORE</span>
-                <p class="text-xs text-slate-300 font-semibold">Integrasi Google Sheets Database</p>
-            </div>
-            <div class="bg-slate-900/40 border border-white/5 p-4 rounded-xl">
-                <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block mb-1">ANALITIK</span>
-                <p class="text-xs text-slate-300 font-semibold">Pareto & Waterfall Bridge Chart</p>
-            </div>
-            <div class="bg-slate-900/40 border border-white/5 p-4 rounded-xl">
-                <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest block mb-1">LAPORAN</span>
-                <p class="text-xs text-slate-300 font-semibold">Ekspor Laporan PDF & Excel Instan</p>
-            </div>
-        </div>
+        // =========================================================================
+        // KONFIGURASI PEMETAAN HEADER EXCEL (MAPPING CONFIGURATION)
+        // =========================================================================
+        const EXCEL_MAPPING = {
+            duration: ['EDH/OH/SH', 'EDH', 'OH', 'SH', 'Jam', 'JAM', 'Downtime', 'Durasi', 'DURASI', 'Lama Gangguan'],
+            loss: ['Loss (KWh)', 'Loss', 'Loss KWh', 'LOSS (KWH)', 'LOSS'],
+            mesin: ['Mesin', 'UNIT', 'Mesin Unit', 'MESIN', 'Unit'],
+            mulai: ['Mulai', 'TIMESTAMP', 'Waktu Mulai', 'MULAI', 'START'],
+            akhir: ['Akhir', 'Selesai', 'FINISH', 'Waktu Selesai', 'AKHIR', 'SELESAI'],
+            status: ['Status', 'STATUS'],
+            lvl3: ['Lvl3', 'Level 3', 'Fault Lvl 3', 'LVL 3', 'LEVEL 3']
+        };
 
-        <!-- Tombol Akses Sistem Utama -->
-        <div class="pt-6 max-w-sm mx-auto">
-            <a href="https://script.google.com/macros/s/AKfycbx-VYtv7XWsWlAwVpb7YgIiRW988tNe_b3rTPVNZjESLjpsE2tNa53ZlP978dIlTbro/exec" 
-               target="_blank"
-               class="inline-flex items-center justify-center px-8 py-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-xl transition-all shadow-xl shadow-blue-500/20 w-full hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-950 uppercase tracking-wider">
-                Akses Dashboard Utama
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-            </a>
-            <span class="text-[10px] text-slate-500 block mt-3 font-semibold uppercase tracking-wider">Membuka Dashboard di Tab Baru secara Aman</span>
-        </div>
+        const MACHINE_MAPPING = {
+            "BMPP AMBON 01": "BMPP AMBON", "BMPP AMBON 02": "BMPP AMBON", "BMPP AMBON 03": "BMPP AMBON",
+            "BMPP AMBON 04": "BMPP AMBON", "BMPP AMBON 05": "BMPP AMBON", "BMPP AMBON 06": "BMPP AMBON",
+            "PLTMG AMBON PEAKER 01": "PLTMG AMBON PEAKER", "PLTMG AMBON PEAKER 02": "PLTMG AMBON PEAKER",
+            "PLTMG AMBON PEAKER 03": "PLTMG AMBON PEAKER", "PLTMG AMBON PEAKER 04": "PLTMG AMBON PEAKER",
+            "PLTMG Biak #1": "PLTMG BIAK 1", "PLTMG BIAK I #01 (MAN)": "PLTMG BIAK 2", "PLTMG BIAK I #02 (MAN)": "PLTMG BIAK 2",
+            "PLTMG Jayapura #1.1": "PLTMG JAYAPURA", "PLTMG Jayapura #1.2": "PLTMG JAYAPURA", "PLTMG Jayapura #1.3": "PLTMG JAYAPURA",
+            "PLTMG Jayapura #2.4": "PLTMG JAYAPURA", "PLTMG Jayapura #2.5": "PLTMG JAYAPURA", "PLTMG Jayapura #2.6": "PLTMG JAYAPURA",
+            "PLTMG JAYAPURA PEAKER #01": "PLTMG JAYAPURA PEAKER", "PLTMG JAYAPURA PEAKER #02": "PLTMG JAYAPURA PEAKER",
+            "PLTMG JAYAPURA PEAKER #03": "PLTMG JAYAPURA PEAKER", "PLTMG JAYAPURA PEAKER #04": "PLTMG JAYAPURA PEAKER",
+            "PLTMG JAYAPURA PEAKER #05": "PLTMG KUPANG PEAKER", 
+            "PLTMG KUPANG PEAKER #01 (WARTSILA)": "PLTMG KUPANG PEAKER", "PLTMG KUPANG PEAKER #02 (WARTSILA)": "PLTMG KUPANG PEAKER",
+            "PLTMG KUPANG PEAKER #03 (WARTSILA)": "PLTMG KUPANG PEAKER", "PLTMG KUPANG PEAKER #04 (WARTSILA)": "PLTMG KUPANG PEAKER",
+            "PLTMG KUPANG PEAKER #05 (WARTSILA)": "PLTMG KUPANG PEAKER", "PLTMG Manokwari #1": "PLTMG MANOKWARI",
+            "PLTMG Manokwari #2": "PLTMG MANOKWARI", "PLTMG MERAUKE #01 (MAN)": "PLTMG MERAUKE 1",
+            "PLTMG MERAUKE #02 (MAN)": "PLTMG MERAUKE 1", "PLTMG Merauke #1": "PLTMG MERAUKE 2",
+            "PLTMG Merauke #2": "PLTMG MERAUKE 2", "PLTMG Nabire #1.1": "PLTMG NABIRE 1",
+            "PLTMG Nabire #1.2": "PLTMG NABIRE 1", "PLTMG Nabire #1.3": "PLTMG NABIRE 1",
+            "PLTMG Nabire #2": "PLTMG NABIRE 2", "PLTMG Sorong #1": "PLTMG SORONG",
+            "PLTMG Sorong #2": "PLTMG SORONG", "PLTMG Sorong #3": "PLTMG SORONG",
+            "PLTMG Sorong #4": "PLTMG SORONG", "PLTMG Sorong #5": "PLTMG SORONG",
+            "PLTMG Timika #1": "PLTMG TIMIKA"
+        };
 
-    </main>
+        let appState = {
+            activeTab: 'tab-dashboard',
+            mode: 'lvl3', metric: 'loss', rawData: [], filteredData: [],
+            selectedStatuses: [], selectedMachines: [], selectedPltmgs: [],
+            charts: { pareto: null, pie: null, waterfall: null, statusDuration: null, statusLoss: null }
+        };
 
-    <!-- Footer Copyright Kaki Halaman -->
-    <footer class="w-full max-w-5xl text-center py-4 border-t border-white/5 text-[10px] text-slate-600 uppercase tracking-widest font-bold">
-        &copy; 2026 UBP PMU PAPUA MALUKU LAB • ALL RIGHTS RESERVED
-    </footer>
+        const themeColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#14b8a6', '#6366f1'];
 
+        // Helper untuk mengekstrak data dari Excel secara fleksibel (fuzzy match)
+        function getExcelValue(row, keysList, fallbackValue = '') {
+            for (const key of keysList) {
+                if (row[key] !== undefined && row[key] !== null) return row[key];
+            }
+            const rowKeys = Object.keys(row);
+            for (const key of keysList) {
+                const cleanKey = key.toLowerCase().trim();
+                for (const actualKey of rowKeys) {
+                    const cleanActualKey = actualKey.toLowerCase().trim();
+                    if (cleanActualKey.includes(cleanKey) || cleanKey.includes(cleanActualKey)) return row[actualKey];
+                }
+            }
+            return fallbackValue;
+        }
+
+        // Fungsi Switch Tab Halaman
+        function switchTab(tabId) {
+            appState.activeTab = tabId;
+            const tabDashboard = document.getElementById('nav-dashboard');
+            const tabStatus = document.getElementById('nav-status');
+            const pageDashboard = document.getElementById('page-dashboard');
+            const pageStatus = document.getElementById('page-status');
+
+            if (tabId === 'tab-dashboard') {
+                tabDashboard.className = "px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 border-blue-500 text-blue-500 transition-all duration-300";
+                tabStatus.className = "px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all duration-300";
+                pageDashboard.classList.remove('hidden');
+                pageStatus.classList.add('hidden');
+            } else {
+                tabDashboard.className = "px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all duration-300";
+                tabStatus.className = "px-6 py-3 text-xs font-bold uppercase tracking-wider border-b-2 border-blue-500 text-blue-500 transition-all duration-300";
+                pageDashboard.classList.add('hidden');
+                pageStatus.classList.remove('hidden');
+                
+                // Memicu rendering ulang chart status agar pas dengan ukuran layar saat pertama kali di-switch
+                if (appState.rawData.length) {
+                    refreshData();
+                }
+            }
+        }
+
+        function toggleDropdown(id) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let d of dropdowns) if (d.id !== id) d.classList.remove("show");
+            document.getElementById(id).classList.toggle("show");
+        }
+
+        window.onclick = (e) => { 
+            if (!e.target.closest('.custom-dropdown')) {
+                document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+            }
+        };
+
+        function formatExcelDate(serial) {
+            if (!serial) return '-';
+            if (typeof serial === 'string') return serial;
+            const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
+            return date.toLocaleString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        }
+
+        // =========================================================================
+        // PROSES LOAD OTOMATIS SAAT HALAMAN DIBUKA (CLIENT-SIDE API FETCH)
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            const initToast = showToast('Mengunduh database cloud Google Sheets...', 'loading');
+            
+            fetch(GAS_API_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error("HTTP Error " + response.status);
+                    return response.json();
+                })
+                .then(dbData => {
+                    initToast.remove();
+                    if (dbData && dbData.length > 0) {
+                        appState.rawData = dbData;
+                        initFilters();
+                        refreshData();
+                        showToast('Database cloud berhasil dimuat!', 'success');
+                    } else {
+                        showToast('Database Sheets kosong. Silakan unggah file Excel pertama Anda.', 'info');
+                    }
+                })
+                .catch(error => {
+                    initToast.remove();
+                    showToast('Gagal memuat database cloud: ' + error.message, 'error');
+                });
+        });
+
+        document.getElementById('excelUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const readingToast = showToast('Membaca berkas Excel...', 'loading');
+
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const workbook = XLSX.read(evt.target.result, { type: 'binary' });
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    
+                    appState.rawData = json.map(row => {
+                        let m = getExcelValue(row, EXCEL_MAPPING.mesin, 'Unknown');
+                        let rawDur = getExcelValue(row, EXCEL_MAPPING.duration, 0);
+                        if (typeof rawDur === 'string') rawDur = rawDur.replace(/,/g, '.');
+                        let durVal = parseFloat(rawDur) || 0;
+                        
+                        let rawLoss = getExcelValue(row, EXCEL_MAPPING.loss, 0);
+                        if (typeof rawLoss === 'string') rawLoss = rawLoss.replace(/,/g, '.');
+                        let rawLossKwh = parseFloat(rawLoss) || 0;
+                        let lossMwh = rawLossKwh / 1000;
+
+                        let rawMulai = getExcelValue(row, EXCEL_MAPPING.mulai, '');
+                        let rawAkhir = getExcelValue(row, EXCEL_MAPPING.akhir, '-');
+                        let rawStatus = String(getExcelValue(row, EXCEL_MAPPING.status, 'N/A')).toUpperCase().trim();
+                        let rawLvl3 = getExcelValue(row, EXCEL_MAPPING.lvl3, 'Lain-lain');
+
+                        return {
+                            mulai: formatExcelDate(rawMulai),
+                            akhir: formatExcelDate(rawAkhir),
+                            machine: m, 
+                            pltmg: MACHINE_MAPPING[m] || "LAINNYA",
+                            status: rawStatus,
+                            lvl3: rawLvl3,
+                            loss: lossMwh,
+                            duration: durVal
+                        };
+                    }).filter(r => r.status !== 'RS' && r.status !== 'SS');
+
+                    readingToast.remove(); // Tutup loading toast pertama
+
+                    if (appState.rawData.length === 0) {
+                        showToast('Tidak ada logs yang valid dalam file Excel!', 'error');
+                        return;
+                    }
+
+                    initFilters();
+                    refreshData();
+                    showToast('Visualisasi lokal diperbarui!', 'success');
+
+                    // =========================================================================
+                    // SINKRONISASI CLOUD DENGAN METODE API POST (AMAN & MANDIRI)
+                    // =========================================================================
+                    const syncingToast = showToast('Menyinkronkan ke database Google Sheets...', 'loading');
+                    
+                    fetch(GAS_API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', // Menghindari batasan browser preflight CORS
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(appState.rawData)
+                    })
+                    .then(() => {
+                        syncingToast.remove();
+                        showToast('Sinkronisasi cloud sukses!', 'success');
+                    })
+                    .catch(error => {
+                        syncingToast.remove();
+                        showToast('Sinkronisasi gagal: ' + error.message, 'error');
+                    });
+
+                } catch (error) {
+                    readingToast.remove();
+                    showToast('Gagal memproses berkas: ' + error.message, 'error');
+                }
+            };
+            reader.readAsBinaryString(file);
+        });
+
+        function initFilters() {
+            const statuses = [...new Set(appState.rawData.map(d => d.status))].filter(s => s !== "N/A" && s !== "").sort();
+            appState.selectedStatuses = [...statuses];
+            renderOptions('status', statuses, 'statusOptions');
+
+            const pltmgs = [...new Set(appState.rawData.map(d => d.pltmg))].sort();
+            appState.selectedPltmgs = [...pltmgs];
+            renderOptions('pltmg', pltmgs, 'pltmgOptions');
+
+            const machines = [...new Set(appState.rawData.map(d => d.machine))].sort();
+            appState.selectedMachines = [...machines];
+            renderOptions('machine', machines, 'machineOptions');
+        }
+
+        function renderOptions(type, items, containerId) {
+            document.getElementById(containerId).innerHTML = items.map(item => {
+                const safeId = item.toString().replace(/[^a-z0-9]/gi, '_');
+                return `
+                    <label class="flex items-center gap-3 px-3 py-2 hover:bg-blue-600/10 rounded-lg cursor-pointer transition-colors group">
+                        <input type="checkbox" checked value="${item}" id="chk-${type}-${safeId}" onchange="handleFilterChange('${type}', '${item}')" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-0">
+                        <span class="text-[11px] font-bold text-slate-400 group-hover:text-slate-200 uppercase tracking-wider">${item}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function handleFilterChange(type, value) {
+            const isChecked = document.getElementById(`chk-${type}-${value.toString().replace(/[^a-z0-9]/gi, '_')}`).checked;
+            if (type === 'pltmg') {
+                const relatedMachines = [...new Set(appState.rawData.filter(d => d.pltmg === value).map(d => d.machine))];
+                relatedMachines.forEach(m => {
+                    const chk = document.getElementById(`chk-machine-${m.toString().replace(/[^a-z0-9]/gi, '_')}`);
+                    if (chk) { chk.checked = isChecked; updateSelection('machine', m, isChecked); }
+                });
+                updateSelection('pltmg', value, isChecked);
+            } else {
+                updateSelection(type, value, isChecked);
+            }
+            refreshData();
+        }
+
+        function updateSelection(type, value, isChecked) {
+            const listKey = type === 'status' ? 'selectedStatuses' : (type === 'machine' ? 'selectedMachines' : 'selectedPltmgs');
+            const idx = appState[listKey].indexOf(value);
+            if (isChecked && idx === -1) appState[listKey].push(value);
+            else if (!isChecked && idx > -1) appState[listKey].splice(idx, 1);
+        }
+
+        function bulkCheckPltmg(check) {
+            [...new Set(appState.rawData.map(d => d.pltmg))].forEach(p => {
+                const chk = document.getElementById(`chk-pltmg-${p.toString().replace(/[^a-z0-9]/gi, '_')}`);
+                if (chk) { chk.checked = check; handleFilterChange('pltmg', p); }
+            });
+        }
+
+        function bulkCheckMachine(check) {
+            [...new Set(appState.rawData.map(d => d.machine))].forEach(m => {
+                const chk = document.getElementById(`chk-machine-${m.toString().replace(/[^a-z0-9]/gi, '_')}`);
+                if (chk) { chk.checked = check; updateSelection('machine', m, check); }
+            });
+            refreshData();
+        }
+
+        function setAnalysisMode(m) { 
+            appState.mode = m; 
+            refreshData(); 
+            document.getElementById('btn-status').className = `px-5 py-2 rounded-xl text-xs font-bold transition-all ${m === 'status' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`; 
+            document.getElementById('btn-lvl3').className = `px-5 py-2 rounded-xl text-xs font-bold transition-all ${m === 'lvl3' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`; 
+        }
+
+        function setMetric(m) { 
+            appState.metric = m; 
+            refreshData(); 
+            document.getElementById('btn-loss').className = `px-5 py-2 rounded-lg font-bold transition-all ${m === 'loss' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`; 
+            document.getElementById('btn-duration').className = `px-5 py-2 rounded-lg font-bold transition-all ${m === 'duration' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`; 
+        }
+
+        function refreshData() {
+            if (!appState.rawData.length) return;
+            appState.filteredData = appState.rawData.filter(d => 
+                appState.selectedStatuses.includes(d.status) && 
+                appState.selectedMachines.includes(d.machine) && 
+                appState.selectedPltmgs.includes(d.pltmg)
+            );
+            
+            let g = {};
+            let totalLoss = 0;
+            let totalDuration = 0;
+
+            appState.filteredData.forEach(d => { 
+                let k = appState.mode === 'status' ? d.status : d.lvl3; 
+                let v = appState.metric === 'loss' ? d.loss : d.duration; 
+                g[k] = (g[k] || 0) + v; 
+                totalLoss += d.loss;
+                totalDuration += d.duration;
+            });
+
+            // Hitung Rata-rata Daya Terganggu
+            let avgCapacityOutage = 0;
+            if (totalDuration > 0) {
+                avgCapacityOutage = totalLoss / totalDuration;
+            }
+
+            document.getElementById('kpi-loss').innerText = totalLoss.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('kpi-duration').innerText = totalDuration.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1});
+            document.getElementById('kpi-efficiency').innerText = avgCapacityOutage.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('kpi-count').innerText = appState.filteredData.length;
+            
+            const sK = Object.keys(g).sort((a,b) => g[b] - g[a]);
+            const vals = sK.map(k => g[k]);
+            const total = vals.reduce((a,b) => a+b, 0);
+            let sum = 0;
+            const cum = vals.map(v => total > 0 ? (((sum += v)/total)*100).toFixed(1) : 0);
+            
+            // Perbarui Chart & Tabel Dashboard Utama
+            updatePareto(sK, vals, cum); 
+            updatePie(sK, vals); 
+            updateWaterfall(sK, vals, total); 
+            updateTable(appState.filteredData);
+
+            // Perbarui Analisis Halaman Status (Jam & Losses)
+            updateStatusAnalysisPage();
+        }
+
+        // =========================================================================
+        // PROSES KALKULASI & RENDERING INDIKATOR HALAMAN ANALISIS STATUS
+        // =========================================================================
+        function updateStatusAnalysisPage() {
+            let statusGroup = {};
+            const isLvl3 = appState.mode === 'lvl3';
+
+            // Mengganti label visual secara dinamis berdasarkan status mode filter yang aktif
+            document.getElementById('status-duration-chart-title').innerText = isLvl3 ? 'Downtime per Level 3 Fault (Jam)' : 'Downtime per Status (Jam)';
+            document.getElementById('status-duration-chart-desc').innerText = isLvl3 ? 'Total jam gangguan operasional per kategori Level 3 Fault' : 'Total jam gangguan operasional per kategori Status';
+            
+            document.getElementById('status-loss-chart-title').innerText = isLvl3 ? 'Energy Losses per Level 3 Fault (MWh)' : 'Energy Losses per Status (MWh)';
+            document.getElementById('status-loss-chart-desc').innerText = isLvl3 ? 'Total kehilangan produksi energi per kategori Level 3 Fault' : 'Total kehilangan produksi energi per kategori Status';
+
+            document.getElementById('status-matrix-title').innerText = isLvl3 ? 'LEVEL 3 FAULT LOSS & DOWNTIME SUMMARY MATRIX' : 'STATUS LOSS & DOWNTIME SUMMARY MATRIX';
+            document.getElementById('status-matrix-desc').innerText = isLvl3 ? 'Konsolidasi perhitungan statistika parameter Level 3 Fault' : 'Konsolidasi perhitungan statistika parameter Status';
+            document.getElementById('status-matrix-col1').innerText = isLvl3 ? 'Kategori Level 3 Fault' : 'Kategori Status';
+            
+            // Kelompokkan data khusus per kategori Status atau Level 3 Fault
+            appState.filteredData.forEach(d => {
+                const key = isLvl3 ? (d.lvl3 || 'Lain-lain') : (d.status || 'N/A');
+                if (!statusGroup[key]) {
+                    statusGroup[key] = { duration: 0, loss: 0, count: 0 };
+                }
+                statusGroup[key].duration += d.duration;
+                statusGroup[key].loss += d.loss;
+                statusGroup[key].count += 1;
+            });
+
+            // 1. Urutkan kunci untuk chart DURATION secara indeks
+            const keysSortedByDuration = Object.keys(statusGroup).sort((a,b) => statusGroup[b].duration - statusGroup[a].duration);
+            const listDurations = keysSortedByDuration.map(k => statusGroup[k].duration);
+
+            // 2. Urutkan kunci untuk chart LOSS secara indeks
+            const keysSortedByLoss = Object.keys(statusGroup).sort((a,b) => statusGroup[b].loss - statusGroup[a].loss);
+            const listLosses = keysSortedByLoss.map(k => statusGroup[k].loss);
+
+            // Perbarui diagram batang durasi
+            updateStatusDurationChart(keysSortedByDuration, listDurations);
+
+            // Perbarui diagram batang losses
+            updateStatusLossChart(keysSortedByLoss, listLosses);
+
+            // Perbarui tabel statistika summary
+            updateStatusSummaryTable(keysSortedByLoss, statusGroup);
+        }
+
+        function updateStatusDurationChart(labels, values) {
+            const ctx = document.getElementById('statusDurationChart').getContext('2d');
+            if (appState.charts.statusDuration) appState.charts.statusDuration.destroy();
+
+            const maxVal = Math.max(...values, 0);
+            const graceMax = maxVal * 1.25;
+
+            appState.charts.statusDuration = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Downtime (Jam)',
+                        data: values,
+                        backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                        hoverBackgroundColor: '#f59e0b',
+                        borderRadius: 8,
+                        borderWidth: 0,
+                        spacing: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 30 } },
+                    scales: {
+                        y: { 
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b' },
+                            max: graceMax
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 9, weight: 'bold' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#fbbf24',
+                            font: { size: 10, weight: 'bold' },
+                            formatter: v => v.toFixed(1) + ' Jam'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateStatusLossChart(labels, values) {
+            const ctx = document.getElementById('statusLossChart').getContext('2d');
+            if (appState.charts.statusLoss) appState.charts.statusLoss.destroy();
+
+            const maxVal = Math.max(...values, 0);
+            const graceMax = maxVal * 1.25;
+
+            appState.charts.statusLoss = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Loss (MWh)',
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        hoverBackgroundColor: '#3b82f6',
+                        borderRadius: 8,
+                        borderWidth: 0,
+                        spacing: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 30 } },
+                    scales: {
+                        y: { 
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b' },
+                            max: graceMax
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 9, weight: 'bold' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#60a5fa',
+                            font: { size: 10, weight: 'bold' },
+                            formatter: v => v.toFixed(1) + ' MWh'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateStatusSummaryTable(keys, dataGroup) {
+            const tb = document.getElementById('statusTableBody');
+            if (!keys.length) {
+                tb.innerHTML = `<tr><td colspan="5" class="px-8 py-20 text-center text-slate-500 italic">Data tidak ditemukan.</td></tr>`;
+                return;
+            }
+
+            const isLvl3 = appState.mode === 'lvl3';
+
+            tb.innerHTML = keys.map(k => {
+                const info = dataGroup[k];
+                const avgOutage = info.duration > 0 ? (info.loss / info.duration) : 0;
+                
+                let badgeStyle = '';
+                if (isLvl3) {
+                    badgeStyle = 'text-blue-400 bg-blue-400/5 border-blue-400/20 px-3';
+                } else {
+                    badgeStyle = k.includes('F') ? 'text-rose-400 bg-rose-400/5 border-rose-400/20 px-2' : 'text-emerald-400 bg-emerald-400/5 border-emerald-400/20 px-2';
+                }
+                
+                return `
+                    <tr class="table-row-highlight transition-colors group">
+                        <td class="px-8 py-5 whitespace-normal max-w-xs">
+                            <span class="inline-block py-1 text-center rounded-md text-[10px] font-black border tracking-wider ${badgeStyle}">
+                                ${k}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5 text-center font-bold text-slate-300 text-xs">${info.count} LOGS</td>
+                        <td class="px-8 py-5 text-right font-mono text-amber-400 text-xs font-bold">${info.duration.toFixed(2)}</td>
+                        <td class="px-8 py-5 text-right font-mono text-blue-400 text-xs font-bold">${info.loss.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="px-8 py-5 text-right font-mono text-emerald-400 text-xs font-black bg-emerald-500/5">${avgOutage.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updatePareto(labels, values, cumulative) {
+            const ctx = document.getElementById('paretoChart').getContext('2d');
+            if (appState.charts.pareto) appState.charts.pareto.destroy();
+            
+            const maxVal = Math.max(...values, 0);
+            const graceMax = maxVal * 1.25;
+
+            appState.charts.pareto = new Chart(ctx, {
+                data: { labels: labels, datasets: [
+                    { 
+                        type: 'line', label: 'Kumulatif %', data: cumulative, 
+                        borderColor: '#f43f5e', borderWidth: 3, pointBackgroundColor: '#f43f5e', 
+                        pointRadius: 4, tension: 0.3, yAxisID: 'yPerc', 
+                        datalabels: { align: 'top', offset: 5, color: '#f43f5e', font: {size: 10, weight: 'bold'}, formatter: v => v + '%' } 
+                    },
+                    { 
+                        type: 'bar', label: 'Nilai', data: values, 
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)', hoverBackgroundColor: '#3b82f6',
+                        borderRadius: 8, yAxisID: 'yAxis', 
+                        datalabels: { anchor: 'end', align: 'top', offset: 2, color: '#60a5fa', font: {size: 10, weight: 'bold'}, formatter: v => v.toFixed(1) } 
+                    }
+                ]},
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    layout: { padding: { top: 30, right: 10 } },
+                    scales: { 
+                        yAxis: { 
+                            grid: { color: 'rgba(255,255,255,0.05)' }, 
+                            ticks: { color: '#64748b' },
+                            max: graceMax 
+                        }, 
+                        yPerc: { 
+                            position: 'right', 
+                            min: 0,
+                            max: 100,
+                            grid: { display: false }, 
+                            ticks: { 
+                                color: '#f43f5e',
+                                callback: function(value) { return value + '%'; }
+                            } 
+                        },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 } } } 
+                    }, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    } 
+                }
+            });
+        }
+
+        // Plugin Center Text Donut Chart
+        const donutCenterTextPlugin = {
+            id: 'donutCenterText',
+            beforeDraw: function(chart) {
+                if (chart.config.type !== 'doughnut') return;
+                
+                const { ctx, width, height } = chart;
+                ctx.save();
+                
+                const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                const unit = appState.metric === 'loss' ? 'MWh' : 'JAM';
+                
+                const totalText = total.toLocaleString(undefined, {
+                    minimumFractionDigits: 1, 
+                    maximumFractionDigits: 1
+                });
+                
+                const meta = chart.getDatasetMeta(0);
+                const centerX = meta.data[0] ? meta.data[0].x : width / 2;
+                const centerY = meta.data[0] ? meta.data[0].y : height / 2;
+                
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                ctx.font = "bold 11px 'Plus Jakarta Sans'";
+                ctx.fillStyle = '#64748b';
+                ctx.fillText('TOTAL', centerX, centerY - 22);
+                
+                ctx.font = "800 24px 'Plus Jakarta Sans'";
+                ctx.fillStyle = '#ffffff'; 
+                ctx.fillText(totalText, centerX, centerY + 2);
+                
+                ctx.font = "800 11px 'Plus Jakarta Sans'";
+                ctx.fillStyle = appState.metric === 'loss' ? '#3b82f6' : '#f59e0b';
+                ctx.fillText(unit, centerX, centerY + 24);
+                
+                ctx.restore();
+            }
+        };
+        Chart.register(donutCenterTextPlugin);
+
+        function updatePie(labels, values) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            if (appState.charts.pie) appState.charts.pie.destroy();
+            appState.charts.pie = new Chart(ctx, { 
+                type: 'doughnut', 
+                data: { 
+                    labels: labels, 
+                    datasets: [{ 
+                        data: values, 
+                        backgroundColor: themeColors, 
+                        borderWidth: 0,
+                        borderRadius: 10,
+                        spacing: 6,
+                        hoverOffset: 15 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '80%',
+                    plugins: { 
+                        legend: { display: false },
+                        datalabels: { display: false } 
+                    } 
+                } 
+            });
+
+            const legendContainer = document.getElementById('pie-legend');
+            if (legendContainer) {
+                const total = values.reduce((a, b) => a + b, 0);
+                legendContainer.innerHTML = labels.map((label, index) => {
+                    const val = values[index];
+                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                    const color = themeColors[index % themeColors.length];
+                    return `
+                        <div class="flex items-start justify-between gap-2 p-1 hover:bg-white/5 rounded-lg transition-colors text-[10px]">
+                            <div class="flex items-start gap-1.5 min-w-0 flex-1">
+                                <span class="w-2 h-2 rounded-full shrink-0 mt-1" style="background-color: ${color}"></span>
+                                <span class="font-bold text-slate-300 uppercase tracking-wide leading-tight whitespace-normal break-words" title="${label}">${label}</span>
+                            </div>
+                            <span class="font-mono text-slate-400 shrink-0 font-bold ml-1">${pct}%</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function updateWaterfall(labels, values, total) {
+            const ctx = document.getElementById('waterfallChart').getContext('2d');
+            if (appState.charts.waterfall) appState.charts.waterfall.destroy();
+            let rS = 0;
+            const wD = values.map((v) => { const s = rS; rS += v; return [s, rS]; });
+            appState.charts.waterfall = new Chart(ctx, { 
+                type: 'bar', 
+                data: { 
+                    labels: [...labels, 'TOTAL'], 
+                    datasets: [{ 
+                        data: [...wD, [0, total]], 
+                        backgroundColor: [...labels.map(() => 'rgba(244, 63, 94, 0.5)'), 'rgba(59, 130, 246, 0.8)'], 
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.1)'
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { 
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' }, grace: '10%' },
+                        x: { ticks: { color: '#94a3b8', font: { size: 9 } } }
+                    },
+                    plugins: { 
+                        legend: { display: false }, 
+                        datalabels: { anchor: 'end', align: 'top', color: '#e2e8f0', font: {weight:'bold'}, formatter: (v) => Math.abs(v[1] - v[0]).toFixed(1) } 
+                    } 
+                } 
+            });
+        }
+
+        function updateTable(data) {
+            const tb = document.getElementById('tableBody');
+            document.getElementById('logCountLabel').innerText = `${data.length} RECORDS`;
+            if (!data.length) { 
+                tb.innerHTML = `<tr><td colspan="8" class="px-8 py-20 text-center text-slate-500 italic">Data tidak ditemukan.</td></tr>`; 
+                return; 
+            }
+            tb.innerHTML = data.map(d => `
+                <tr class="table-row-highlight transition-colors group">
+                    <td class="px-8 py-5 font-mono text-[10px] text-slate-500 group-hover:text-slate-300">${d.mulai}</td>
+                    <td class="px-8 py-5 font-mono text-[10px] text-slate-500 group-hover:text-slate-300">${d.akhir}</td>
+                    <td class="px-8 py-5 font-bold text-blue-400/70 text-[10px] uppercase">${d.pltmg}</td>
+                    <td class="px-8 py-5 font-black text-slate-200 text-xs">${d.machine}</td>
+                    <td class="px-8 py-5 text-center">
+                        <span class="inline-block w-16 py-1 rounded-md text-[9px] font-black border tracking-tighter ${d.status.includes('F') ? 'text-rose-400 bg-rose-400/5 border-rose-400/20' : 'text-emerald-400 bg-emerald-400/5 border-emerald-400/20'}">
+                            ${d.status}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-slate-400 text-xs italic font-medium">${d.lvl3}</td>
+                    <td class="px-8 py-5 text-right font-mono text-slate-300 text-xs font-bold">${d.duration.toFixed(2)}</td>
+                    <td class="px-8 py-5 text-right font-black text-blue-400 text-xs bg-blue-500/5">${d.loss.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportToExcel() {
+            if (!appState.filteredData.length) return;
+            const ws = XLSX.utils.json_to_sheet(appState.filteredData.map(d => ({ "Mulai": d.mulai, "Selesai": d.akhir, "Unit PLTMG": d.pltmg, "Machine": d.machine, "Status": d.status, "Fault": d.lvl3, "Duration": d.duration.toFixed(2), "Loss (MWh)": d.loss.toFixed(2) })));
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Analytics_Logs");
+            XLSX.writeFile(wb, `Report_PMU_${Date.now()}.xlsx`);
+        }
+
+        async function exportToPDF() {
+            if (!appState.filteredData.length) return;
+            const { jsPDF } = window.jspdf; 
+            
+            const targetId = appState.activeTab === 'tab-dashboard' ? 'capture-area' : 'capture-area-status';
+            const cA = document.getElementById(targetId);
+            const tC = document.getElementById('table-container');
+            const oH = tC ? tC.style.maxHeight : 'none'; 
+            
+            if (tC) tC.style.maxHeight = 'none';
+            try {
+                const canvas = await html2canvas(cA, { backgroundColor: '#020617', scale: 2 });
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pW = pdf.internal.pageSize.getWidth(); const pH = (canvas.height * pW) / canvas.width;
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pW, pH);
+                pdf.save(`Report_PMU_${Date.now()}.pdf`);
+            } finally { if (tC) tC.style.maxHeight = oH; }
+        }
+    </script>
 </body>
 </html>
