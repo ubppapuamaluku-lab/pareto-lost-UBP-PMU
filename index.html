@@ -3,94 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menghubungkan ke PLO UBP PMU</title>
+    <title>Portal Resmi PLO UBP PMU | Core-MES Analytics</title>
     <!-- Tailwind CSS CDN untuk styling modern dan responsif -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @keyframes progress {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-        .animate-progress {
-            animation: progress 3s linear forwards;
-        }
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #020617;
-            background-image: radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.2) 0%, transparent 80%);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(30, 58, 138, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(29, 78, 216, 0.1) 0%, transparent 50%);
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col items-center justify-center p-6 select-none font-sans">
+<body class="text-slate-100 min-h-screen flex flex-col items-center justify-between p-6 select-none">
+
+    <!-- Header Atas (Spacer) -->
+    <div class="w-full max-w-5xl flex justify-between items-center py-4 border-b border-white/5">
+        <span class="text-xs font-black tracking-[0.2em] text-blue-500 uppercase">CORE-MES SYSTEMS</span>
+        <span class="text-[10px] font-bold text-slate-500 bg-slate-900 border border-white/5 px-3 py-1 rounded-full uppercase">ONLINE PORTAL</span>
+    </div>
 
     <!-- Container Utama -->
-    <div class="max-w-md w-full text-center space-y-8 p-8 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm shadow-2xl">
+    <main class="max-w-2xl w-full text-center space-y-8 py-12">
         
         <!-- Logo / Icon Representatif (SVG) -->
         <div class="flex justify-center">
-            <div class="p-4 bg-blue-500/10 rounded-full border border-blue-500/20 text-blue-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <div class="p-5 bg-blue-500/10 rounded-full border border-blue-500/20 text-blue-400 shadow-2xl shadow-blue-500/10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
                 </svg>
             </div>
         </div>
 
-        <!-- Judul & Keterangan -->
-        <div class="space-y-3">
-            <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                PLO UBP PMU
+        <!-- Judul Utama & Sub-Judul Akademis -->
+        <div class="space-y-4">
+            <p class="text-blue-500 text-xs font-extrabold tracking-[0.3em] uppercase">SISTEM INFORMASI MONITORING & ANALISIS</p>
+            <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white leading-none">
+                PLO <span class="bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">UBP PMU</span>
             </h1>
-            <p class="text-sm text-slate-400">
-                Menghubungkan koneksi aman ke server database Google Sheets...
+            <p class="text-sm md:text-base text-slate-400 max-w-lg mx-auto font-medium">
+                Platform visualisasi data pemeliharaan pembangkit, Pareto distribusi gangguan, serta Loss Bridge Analysis berbasis Cloud Integration.
             </p>
         </div>
 
-        <!-- Animasi Loading Bar Premium -->
-        <div class="space-y-2">
-            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-progress"></div>
+        <!-- Pemisah Visual -->
+        <div class="flex justify-center gap-2">
+            <span class="w-16 h-1 bg-blue-600 rounded-full"></span>
+            <span class="w-3 h-1 bg-indigo-500 rounded-full"></span>
+            <span class="w-1.5 h-1 bg-slate-800 rounded-full"></span>
+        </div>
+
+        <!-- Kotak Fitur Utama (Highlight) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left max-w-xl mx-auto pt-4">
+            <div class="bg-slate-900/40 border border-white/5 p-4 rounded-xl">
+                <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-1">DATA CORE</span>
+                <p class="text-xs text-slate-300 font-semibold">Integrasi Google Sheets Database</p>
             </div>
-            <div class="flex justify-between text-xs text-slate-500 px-1">
-                <span>Mengamankan Sesi</span>
-                <span>Dialihkan dalam 3 detik...</span>
+            <div class="bg-slate-900/40 border border-white/5 p-4 rounded-xl">
+                <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block mb-1">ANALITIK</span>
+                <p class="text-xs text-slate-300 font-semibold">Pareto & Waterfall Bridge Chart</p>
+            </div>
+            <div class="bg-slate-900/40 border border-white/5 p-4 rounded-xl">
+                <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest block mb-1">LAPORAN</span>
+                <p class="text-xs text-slate-300 font-semibold">Ekspor Laporan PDF & Excel Instan</p>
             </div>
         </div>
 
-        <!-- Tombol Cadangan jika Auto-Redirect Terhambat -->
-        <div class="pt-4 border-t border-slate-800/60">
-            <p class="text-xs text-slate-500 mb-3">
-                Jika halaman tidak otomatis berpindah, silakan klik tombol di bawah ini:
-            </p>
-            <a id="redirect-link" 
-               href="https://script.google.com/macros/s/AKfycbx-VYtv7XWsWlAwVpb7YgIiRW988tNe_b3rTPVNZjESLjpsE2tNa53ZlP978dIlTbro/exec" 
-               class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-lg transition-colors shadow-lg shadow-blue-500/20 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-950">
-                Masuk ke Dashboard
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        <!-- Tombol Akses Sistem Utama -->
+        <div class="pt-6 max-w-sm mx-auto">
+            <a href="https://script.google.com/macros/s/AKfycbx-VYtv7XWsWlAwVpb7YgIiRW988tNe_b3rTPVNZjESLjpsE2tNa53ZlP978dIlTbro/exec" 
+               target="_blank"
+               class="inline-flex items-center justify-center px-8 py-4 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-xl transition-all shadow-xl shadow-blue-500/20 w-full hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-950 uppercase tracking-wider">
+                Akses Dashboard Utama
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
             </a>
+            <span class="text-[10px] text-slate-500 block mt-3 font-semibold uppercase tracking-wider">Membuka Dashboard di Tab Baru secara Aman</span>
         </div>
-    </div>
 
-    <!-- Informasi Copyright Kaki Halaman -->
-    <div class="mt-8 text-center text-xs text-slate-600">
-        &copy; 2026 UBP PMU Papua Maluku Lab. All Rights Reserved.
-    </div>
+    </main>
 
-    <!-- Logika Pengalihan Otomatis Murni (Mencegah Pemblokiran Cookie) -->
-    <script>
-        // URL Target Web App Google Apps Script Anda yang Asli dan Aktif
-        const TARGET_URL = "https://script.google.com/macros/s/AKfycbx-VYtv7XWsWlAwVpb7YgIiRW988tNe_b3rTPVNZjESLjpsE2tNa53ZlP978dIlTbro/exec";
+    <!-- Footer Copyright Kaki Halaman -->
+    <footer class="w-full max-w-5xl text-center py-4 border-t border-white/5 text-[10px] text-slate-600 uppercase tracking-widest font-bold">
+        &copy; 2026 UBP PMU PAPUA MALUKU LAB • ALL RIGHTS RESERVED
+    </footer>
 
-        // Mengarahkan tombol manual ke URL yang benar
-        document.getElementById('redirect-link').href = TARGET_URL;
-
-        // Eksekusi pengalihan otomatis setelah 3 detik (3000 ms) ke domain Google asli
-        setTimeout(() => {
-            window.location.href = TARGET_URL;
-        }, 3000);
-    </script>
 </body>
 </html>
